@@ -1,0 +1,81 @@
+import { useState } from "react";
+import { money, orderTotal } from "../../data/mockData";
+export default function OrderTable({ orders, showCustomer = false }) {
+  const [selected, setSelected] = useState(null);
+  return (
+    <>
+      <div className="table-responsive">
+        <table className="table align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Mã đơn</th>
+              {showCustomer && <th>Khách hàng</th>}
+              <th>Ngày đặt</th>
+              <th>Tổng tiền</th>
+              <th>Trạng thái</th>
+              <th>Chi tiết</th>
+            </tr>
+          </thead>
+          <tbody>
+            {orders.map((order) => (
+              <tr key={order.id}>
+                <td className="fw-semibold">{order.id}</td>
+                {showCustomer && <td>{order.customer}</td>}
+                <td>{new Date(order.date).toLocaleDateString("vi-VN")}</td>
+                <td>{money(orderTotal(order))}</td>
+                <td>
+                  <span
+                    className={`status status-${["Đang xử lý", "Đang giao", "Hoàn thành", "Đã hủy"].indexOf(order.status)}`}
+                  >
+                    {order.status}
+                  </span>
+                </td>
+                <td>
+                  <button
+                    className="btn btn-sm btn-light"
+                    onClick={() => setSelected(order)}
+                  >
+                    Xem <i aria-hidden="true" className="bi bi-arrow-right" />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {orders.length === 0 && (
+          <p className="empty-state">Không tìm thấy đơn hàng.</p>
+        )}
+      </div>
+      {selected && (
+        <section className="order-detail mt-4" aria-label="Chi tiết đơn hàng">
+          <div className="d-flex justify-content-between">
+            <h3 className="h6">Chi tiết {selected.id}</h3>
+            <button
+              className="btn btn-sm btn-outline-secondary"
+              onClick={() => setSelected(null)}
+            >
+              Đóng
+            </button>
+          </div>
+          <p className="small text-secondary">
+            {selected.customer} · {selected.status}
+          </p>
+          {selected.items.map((item, index) => (
+            <div
+              className="d-flex justify-content-between py-2 gap-3"
+              key={index}
+            >
+              <span>
+                {item.name} × {item.quantity}
+              </span>
+              <strong>{money(item.price * item.quantity)}</strong>
+            </div>
+          ))}
+          <div className="border-top pt-3 mt-2 fw-bold text-end">
+            Tổng cộng: {money(orderTotal(selected))}
+          </div>
+        </section>
+      )}
+    </>
+  );
+}

@@ -1,0 +1,63 @@
+name: Mini Store CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mini-store-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: Lint, build and verify Docker
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Build production
+        run: npm run build
+        env:
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
+      - name: Build Docker image
+        run: docker build --build-arg VITE_API_URL="$VITE_API_URL" -t mini-store-frontend:ci .
+        env:
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
+      - name: Verify Nginx and SPA fallback
+        shell: bash
+        run: |
+          docker run --rm mini-store-frontend:ci nginx -t
+          docker run -d --name mini-store-ci -p 8080:80 mini-store-frontend:ci
+          trap 'docker rm -f mini-store-ci' EXIT
+          for attempt in {1..15}; do
+            if curl --fail --silent http://localhost:8080/health; then break; fi
+            sleep 1
+          done
+          curl --fail --silent http://localhost:8080/health
+          curl --fail --silent http://localhost:8080/ > /tmp/home.html
+          for route in /products /products/ /admin/dashboard /user/dashboard /products/1; do
+            curl --fail --silent "http://localhost:8080$route" > /tmp/route.html
+            cmp /tmp/home.html /tmp/route.html
+          done
+
+  # TODO CD: thêm job deploy với needs: ci, chỉ chạy push vào main.
+  # 1. Cấu hình GitHub Environment production và chính sách phê duyệt.
+  # 2. Đăng nhập registry bằng secrets (DOCKERHUB_USERNAME / DOCKERHUB_TOKEN).
+  # 3. Build/push image gắn tag github.sha; tránh chỉ dùng latest.
+  # 4. Triển khai image trên server bằng thông tin SSH lưu trong secrets.
+  # 5. Kiểm tra /health; rollback về tag trước nếu triển khai thất bại.
+  # Chưa có registry/server: workflow chỉ CI, không tự triển khai.
