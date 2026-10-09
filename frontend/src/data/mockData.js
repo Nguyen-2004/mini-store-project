@@ -11,6 +11,7 @@ export const initialUsers = [
     email: "user@example.com",
     phone: "0901234567",
     role: "user",
+    active: true,
   },
   {
     id: "u2",
@@ -19,6 +20,7 @@ export const initialUsers = [
     email: "admin@example.com",
     phone: "0909876543",
     role: "admin",
+    active: true,
   },
   {
     id: "u3",
@@ -27,6 +29,7 @@ export const initialUsers = [
     email: "linh@example.com",
     phone: "0912345678",
     role: "user",
+    active: true,
   },
   {
     id: "u4",
@@ -35,6 +38,7 @@ export const initialUsers = [
     email: "nam@example.com",
     phone: "0987654321",
     role: "user",
+    active: false,
   },
 ];
 export const initialProducts = [
@@ -157,6 +161,9 @@ export const initialOrders = [
     status: "Đã hủy",
     items: [{ name: "Cà phê rang mộc", price: 89000, quantity: 1 }],
   },
+];
+export const initialAddresses = [
+  { id: "a1", userId: "u1", name: "Nhà riêng", recipient: "Nguyễn Minh Anh", phone: "0901234567", street: "12 Nguyễn Huệ", ward: "Bến Nghé", district: "Quận 1", city: "TP. Hồ Chí Minh", isDefault: true },
 ];
 export const orderTotal = (order) =>
   order.items.reduce((sum, item) => sum + item.price * item.quantity, 0);

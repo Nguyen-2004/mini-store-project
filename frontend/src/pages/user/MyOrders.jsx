@@ -9,7 +9,7 @@ export default function MyOrders() {
         Theo dõi thông tin và trạng thái từng đơn hàng.
       </PageHeading>
       <section className="panel">
-        <OrderTable orders={orders.filter((o) => o.userId === account.id)} />
+        <OrderTable orders={orders.filter((o) => o.userId === account.id)} detailBase="/user/orders" />
       </section>
     </>
   );

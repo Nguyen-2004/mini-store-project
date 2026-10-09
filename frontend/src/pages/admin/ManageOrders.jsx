@@ -4,7 +4,7 @@ import { statuses } from "../../data/mockData";
 import PageHeading from "../../components/common/PageHeading";
 import OrderTable from "../../components/common/OrderTable";
 export default function ManageOrders() {
-  const { orders } = useStore();
+  const { orders, save } = useStore();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const filtered = orders.filter(
@@ -40,7 +40,7 @@ export default function ManageOrders() {
             ))}
           </select>
         </div>
-        <OrderTable orders={filtered} showCustomer />
+        <OrderTable orders={filtered} showCustomer onStatusChange={(order, nextStatus) => save("orders", { ...order, status: nextStatus })} />
       </section>
     </>
   );

@@ -9,6 +9,14 @@ export default function AdminDashboard() {
   const revenue = orders
     .filter((o) => o.status === "Hoàn thành")
     .reduce((sum, o) => sum + orderTotal(o), 0);
+  const monthly = Array.from({ length: 6 }, (_, index) => {
+    const date = new Date();
+    date.setMonth(date.getMonth() - (5 - index));
+    const key = date.toISOString().slice(0, 7);
+    const amount = orders.filter((order) => order.date?.startsWith(key) && order.status !== "Đã hủy").reduce((sum, order) => sum + orderTotal(order), 0);
+    return { label: date.toLocaleDateString("vi-VN", { month: "short" }), amount };
+  });
+  const maxRevenue = Math.max(...monthly.map((item) => item.amount), 1);
   return (
     <>
       <PageHeading
@@ -40,6 +48,10 @@ export default function AdminDashboard() {
           </div>
         ))}
       </div>
+      <section className="panel mt-4 p-4">
+        <div className="d-flex justify-content-between align-items-start"><div><h2 className="h5 mb-1">Doanh thu theo tháng</h2><span className="small text-secondary">Dữ liệu đơn hàng mẫu</span></div><i className="bi bi-bar-chart-line fs-4 text-success"/></div>
+        <div className="sales-chart" role="img" aria-label="Biểu đồ doanh thu sáu tháng gần nhất">{monthly.map((item) => <div className="sales-bar-wrap" key={item.label}><span className="small text-secondary">{money(item.amount)}</span><div className="sales-bar" style={{ height: (Math.max(item.amount / maxRevenue * 100, 4)) + "%" }}/><small>{item.label}</small></div>)}</div>
+      </section>
       <section className="panel mt-4">
         <div className="panel-heading">
           <div>

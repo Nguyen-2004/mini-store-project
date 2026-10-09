@@ -3,7 +3,7 @@ import { useStore } from "../../context/StoreContext";
 import { money } from "../../data/mockData";
 export default function ProductDetail() {
   const { id } = useParams();
-  const { products } = useStore();
+  const { products, addToCart, toggleWishlist, wishlist } = useStore();
   const product = products.find((p) => p.id === id);
   if (!product)
     return (
@@ -43,8 +43,12 @@ export default function ProductDetail() {
               : "Tạm hết hàng"}
           </p>
           <p className="small text-secondary">
-            Danh mục minh họa của Mini Store. Chưa hỗ trợ đặt hàng trực tuyến.
+            Sản phẩm được giao tận nơi trong khu vực phục vụ của Mini Store.
           </p>
+          <div className="d-flex gap-2 mt-4">
+            <button className="btn btn-primary" disabled={!product.stock} onClick={() => addToCart(product.id)}><i className="bi bi-bag-plus me-2"/>Thêm vào giỏ</button>
+            <button className={`btn ${wishlist.includes(product.id) ? "btn-outline-danger" : "btn-light"}`} onClick={() => toggleWishlist(product.id)}><i className={`bi ${wishlist.includes(product.id) ? "bi-heart-fill" : "bi-heart"} me-2`}/>Yêu thích</button>
+          </div>
         </div>
       </div>
     </div>

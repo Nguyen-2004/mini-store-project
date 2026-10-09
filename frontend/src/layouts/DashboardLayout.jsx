@@ -12,6 +12,9 @@ const userLinks = [
   ["dashboard", "grid", "Tổng quan"],
   ["profile", "person", "Hồ sơ cá nhân"],
   ["orders", "bag", "Đơn hàng của tôi"],
+  ["addresses", "geo-alt", "Địa chỉ nhận hàng"],
+  ["wishlist", "heart", "Yêu thích"],
+  ["change-password", "key", "Đổi mật khẩu"],
 ];
 export default function DashboardLayout({ role }) {
   const [open, setOpen] = useState(false);

@@ -3,6 +3,7 @@ import { useStore } from "../../context/StoreContext";
 import PageHeading from "../../components/common/PageHeading";
 import StatCard from "../../components/common/StatCard";
 import OrderTable from "../../components/common/OrderTable";
+import { money, orderTotal } from "../../data/mockData";
 export default function UserDashboard() {
   const { account, orders } = useStore();
   const mine = orders.filter((o) => o.userId === account.id);
@@ -42,8 +43,13 @@ export default function UserDashboard() {
             mine.filter((o) => o.status === "Hoàn thành").length,
             "check2-circle",
           ],
+          [
+            "Tổng tiền đã mua",
+            money(mine.filter((o) => o.status !== "Đã hủy").reduce((sum, order) => sum + orderTotal(order), 0)),
+            "wallet2",
+          ],
         ].map(([title, value, icon]) => (
-          <div className="col-md-4" key={title}>
+          <div className="col-sm-6 col-xl-3" key={title}>
             <StatCard
               title={title}
               value={value}

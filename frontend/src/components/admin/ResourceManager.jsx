@@ -23,10 +23,12 @@ export default function ResourceManager({ type }) {
   const fields = isProduct ? productFields : userFields;
   const label = isProduct ? "sản phẩm" : "người dùng";
   const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [editing, setEditing] = useState(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const filtered = rows.filter((row) =>
+  const filtered = rows.filter((row) => (!statusFilter || (statusFilter === "active" ? row.active !== false : row.active === false)) && (!isProduct || !category || row.category === category) &&
     (isProduct
       ? [row.name, row.category]
       : [row.username, row.fullName, row.email]
@@ -70,7 +72,8 @@ export default function ResourceManager({ type }) {
     store.save(type, {
       ...editing,
       ...values,
-      ...(!isProduct && { role: editing.role || "user" }),
+      ...(!isProduct && { role: editing.role || "user", active: editing.active ?? true }),
+      ...(isProduct && { active: editing.active ?? true }),
     });
     setEditing(null);
     setError("");
@@ -193,6 +196,8 @@ export default function ResourceManager({ type }) {
           <span className="text-secondary">
             {filtered.length} {label}
           </span>
+          {isProduct && <select className="form-select status-filter" aria-label="Lọc danh mục" value={category} onChange={(e) => setCategory(e.target.value)}><option value="">Tất cả danh mục</option>{[...new Set(rows.map((row) => row.category))].map((item) => <option key={item}>{item}</option>)}</select>}
+          <select className="form-select status-filter" aria-label="Lọc tình trạng" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="">Tất cả tình trạng</option><option value="active">Đang hoạt động</option><option value="inactive">Ngừng hoạt động</option></select>
           <input
             className="form-control search-input"
             aria-label={"Tìm " + label}
@@ -206,8 +211,8 @@ export default function ResourceManager({ type }) {
             <thead>
               <tr>
                 {(isProduct
-                  ? ["Sản phẩm", "Danh mục", "Giá", "Tồn kho", "Thao tác"]
-                  : ["Người dùng", "Username", "Email", "Vai trò", "Thao tác"]
+                  ? ["Sản phẩm", "Danh mục", "Giá", "Tồn kho", "Tình trạng", "Thao tác"]
+                  : ["Người dùng", "Username", "Email", "Vai trò", "Tình trạng", "Thao tác"]
                 ).map((heading) => (
                   <th key={heading}>{heading}</th>
                 ))}
@@ -234,6 +239,9 @@ export default function ResourceManager({ type }) {
                     ) : (
                       <span className="status status-2">{row.role}</span>
                     )}
+                  </td>
+                  <td>
+                    <button className={`btn btn-sm ${row.active === false ? "btn-outline-secondary" : "btn-outline-success"}`} onClick={() => store.save(type, { ...row, active: row.active === false })}>{row.active === false ? "Ngừng bán" : "Đang hoạt động"}</button>
                   </td>
                   <td>
                     <div className="d-flex gap-2">

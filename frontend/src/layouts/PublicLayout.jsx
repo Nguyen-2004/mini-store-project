@@ -4,7 +4,8 @@ import Brand from "../components/common/Brand";
 import { useStore } from "../context/StoreContext";
 export default function PublicLayout() {
   const [open, setOpen] = useState(false);
-  const { account, logout } = useStore();
+  const { account, logout, cart } = useStore();
+  const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   return (
     <>
       <div className="announcement">
@@ -37,7 +38,11 @@ export default function PublicLayout() {
                 Về chúng tôi
               </NavLink>
             </div>
-            <div className="d-flex gap-2">
+            <div className="d-flex gap-2 align-items-center">
+              <Link className="btn btn-light position-relative" to="/cart" aria-label={`Giỏ hàng, ${cartCount} sản phẩm`}>
+                <i aria-hidden="true" className="bi bi-bag" />
+                {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
+              </Link>
               {account ? (
                 <>
                   <Link

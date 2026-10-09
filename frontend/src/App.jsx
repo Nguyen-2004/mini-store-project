@@ -9,9 +9,13 @@ import Products from "./pages/public/Products";
 import ProductDetail from "./pages/public/ProductDetail";
 import About from "./pages/public/About";
 import Login from "./pages/public/Login";
+import Cart from "./pages/public/Cart";
+import Checkout from "./pages/public/Checkout";
+import OrderConfirmation from "./pages/public/OrderConfirmation";
 import UserDashboard from "./pages/user/UserDashboard";
 import Profile from "./pages/user/Profile";
 import MyOrders from "./pages/user/MyOrders";
+import { Addresses, ChangePassword, OrderDetail, Wishlist } from "./pages/user/UserPages";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ManageUsers from "./pages/admin/ManageUsers";
 import ManageProducts from "./pages/admin/ManageProducts";
@@ -27,6 +31,9 @@ export default function App() {
             <Route path="products/:id" element={<ProductDetail />} />
             <Route path="about" element={<About />} />
             <Route path="login" element={<Login />} />
+            <Route path="cart" element={<Cart />} />
+            <Route path="checkout" element={<Checkout />} />
+            <Route path="order-confirmation/:id" element={<OrderConfirmation />} />
             <Route
               path="*"
               element={
@@ -45,6 +52,10 @@ export default function App() {
               <Route path="dashboard" element={<UserDashboard />} />
               <Route path="profile" element={<Profile />} />
               <Route path="orders" element={<MyOrders />} />
+              <Route path="orders/:id" element={<OrderDetail />} />
+              <Route path="addresses" element={<Addresses />} />
+              <Route path="wishlist" element={<Wishlist />} />
+              <Route path="change-password" element={<ChangePassword />} />
             </Route>
           </Route>
           <Route element={<ProtectedRoute role="admin" />}>

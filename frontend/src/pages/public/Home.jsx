@@ -3,6 +3,7 @@ import { useStore } from "../../context/StoreContext";
 import ProductCard from "../../components/common/ProductCard";
 export default function Home() {
   const { products } = useStore();
+  const availableProducts = products.filter((product) => product.active !== false);
   return (
     <>
       <section className="hero-section">
@@ -86,7 +87,7 @@ export default function Home() {
             </Link>
           </div>
           <div className="row g-4">
-            {products.slice(0, 4).map((product) => (
+            {availableProducts.slice(0, 4).map((product) => (
               <div className="col-sm-6 col-lg-3" key={product.id}>
                 <ProductCard product={product} />
               </div>

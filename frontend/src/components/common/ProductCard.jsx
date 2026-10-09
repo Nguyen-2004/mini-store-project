@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import { money } from "../../data/mockData";
+import { useStore } from "../../context/StoreContext";
 export default function ProductCard({ product }) {
+  const { addToCart, toggleWishlist, wishlist } = useStore();
   return (
     <article className="product-card h-100">
       <Link to={`/products/${product.id}`} className="product-image">
@@ -21,6 +23,14 @@ export default function ProductCard({ product }) {
           >
             Chi tiết <i aria-hidden="true" className="bi bi-arrow-up-right" />
           </Link>
+        </div>
+        <div className="d-flex gap-2 mt-3">
+          <button className="btn btn-primary btn-sm flex-grow-1" disabled={!product.stock} onClick={() => addToCart(product.id)}>
+            <i aria-hidden="true" className="bi bi-bag-plus me-1" /> Thêm giỏ
+          </button>
+          <button className={`btn btn-sm ${wishlist.includes(product.id) ? "btn-outline-danger" : "btn-light"}`} aria-label="Yêu thích" onClick={() => toggleWishlist(product.id)}>
+            <i aria-hidden="true" className={`bi ${wishlist.includes(product.id) ? "bi-heart-fill" : "bi-heart"}`} />
+          </button>
         </div>
       </div>
     </article>

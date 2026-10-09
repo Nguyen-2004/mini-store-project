@@ -4,15 +4,17 @@ import ProductCard from "../../components/common/ProductCard";
 import PageHeading from "../../components/common/PageHeading";
 export default function Products() {
   const { products } = useStore();
+  const availableProducts = products.filter((product) => product.active !== false);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("Tất cả");
-  const filtered = products.filter(
+  const [sort, setSort] = useState("featured");
+  const filtered = availableProducts.filter(
     (p) =>
-      p.name
+      `${p.name} ${p.description} ${p.category}`
         .toLocaleLowerCase("vi")
         .includes(search.toLocaleLowerCase("vi").trim()) &&
       (category === "Tất cả" || p.category === category),
-  );
+  ).sort((a,b) => sort === "price-low" ? a.price-b.price : sort === "price-high" ? b.price-a.price : a.name.localeCompare(b.name, "vi"));
   return (
     <div className="container section-space">
       <PageHeading eyebrow="MỖI NGÀY MỘT CHÚT TƯƠI MỚI" title="Góc mua sắm">
@@ -20,7 +22,7 @@ export default function Products() {
       </PageHeading>
       <div className="filter-bar">
         <div className="d-flex gap-2 flex-wrap">
-          {["Tất cả", ...new Set(products.map((p) => p.category))].map((c) => (
+          {["Tất cả", ...new Set(availableProducts.map((p) => p.category))].map((c) => (
             <button
               className={`btn ${category === c ? "btn-primary" : "btn-light"}`}
               onClick={() => setCategory(c)}
@@ -37,6 +39,9 @@ export default function Products() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
+        <select className="form-select sort-select" aria-label="Sắp xếp sản phẩm" value={sort} onChange={(e) => setSort(e.target.value)}>
+          <option value="featured">Tên sản phẩm</option><option value="price-low">Giá tăng dần</option><option value="price-high">Giá giảm dần</option>
+        </select>
       </div>
       <p className="small text-secondary">{filtered.length} sản phẩm</p>
       <div className="row g-4">
