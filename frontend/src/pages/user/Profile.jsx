@@ -4,7 +4,7 @@ import PageHeading from "../../components/common/PageHeading";
 export default function Profile() {
   const { account, save } = useStore();
   const [message, setMessage] = useState("");
-  function submit(e) {
+  async function submit(e) {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
     const fullName = form.get("fullName").trim();
@@ -12,13 +12,13 @@ export default function Profile() {
       setMessage("Vui lòng nhập họ tên hợp lệ.");
       return;
     }
-    save("users", {
+    const saved = await save("users", {
       ...account,
       fullName,
       email: form.get("email").trim(),
       phone: form.get("phone").trim(),
     });
-    setMessage("Đã lưu thông tin cá nhân.");
+    setMessage(saved ? "Đã lưu thông tin cá nhân." : "Không thể lưu hồ sơ. Vui lòng thử lại.");
   }
   return (
     <>

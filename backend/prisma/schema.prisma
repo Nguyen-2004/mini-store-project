@@ -1,0 +1,151 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPING
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id           String         @id @default(uuid()) @db.Uuid
+  username     String         @unique @db.VarChar(40)
+  email        String         @unique @db.VarChar(254)
+  fullName     String         @db.VarChar(120)
+  phone        String?        @db.VarChar(24)
+  passwordHash String         @db.VarChar(255)
+  role         Role           @default(USER)
+  isActive     Boolean        @default(true)
+  cartItems    CartItem[]
+  orders       Order[]
+  addresses    Address[]
+  wishlist     WishlistItem[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([role, isActive])
+  @@index([createdAt])
+}
+
+model Category {
+  id        String    @id @default(uuid()) @db.Uuid
+  name      String    @unique @db.VarChar(80)
+  slug      String    @unique @db.VarChar(100)
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Product {
+  id          String         @id @default(uuid()) @db.Uuid
+  name        String         @db.VarChar(160)
+  description String         @db.Text
+  price       Decimal        @db.Decimal(12, 2)
+  unit        String         @default("Sản phẩm") @db.VarChar(80)
+  image       String         @db.VarChar(500)
+  stock       Int            @default(0)
+  isActive    Boolean        @default(true)
+  categoryId  String         @db.Uuid
+  category    Category       @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+  wishlist    WishlistItem[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([categoryId, isActive])
+  @@index([isActive, createdAt])
+  @@index([name])
+}
+
+model CartItem {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  productId String   @db.Uuid
+  quantity  Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, productId])
+  @@index([userId])
+}
+
+model Order {
+  id              String      @id @default(uuid()) @db.Uuid
+  orderNumber     String      @unique @db.VarChar(32)
+  userId          String      @db.Uuid
+  status          OrderStatus @default(PROCESSING)
+  subtotal        Decimal     @db.Decimal(12, 2)
+  total           Decimal     @db.Decimal(12, 2)
+  recipient       String      @db.VarChar(120)
+  phone           String      @db.VarChar(24)
+  street          String      @db.VarChar(200)
+  ward            String?     @db.VarChar(100)
+  district        String?     @db.VarChar(100)
+  city            String      @db.VarChar(100)
+  user            User        @relation(fields: [userId], references: [id], onDelete: Restrict)
+  items           OrderItem[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+}
+
+model OrderItem {
+  id          String   @id @default(uuid()) @db.Uuid
+  orderId     String   @db.Uuid
+  productId   String   @db.Uuid
+  productName String   @db.VarChar(160)
+  productImage String  @db.VarChar(500)
+  unitPrice   Decimal  @db.Decimal(12, 2)
+  quantity    Int
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([productId])
+}
+
+model Address {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @db.Uuid
+  label      String   @default("Nhà riêng") @db.VarChar(80)
+  recipient  String   @db.VarChar(120)
+  phone      String   @db.VarChar(24)
+  street     String   @db.VarChar(200)
+  ward       String?  @db.VarChar(100)
+  district   String?  @db.VarChar(100)
+  city       String   @db.VarChar(100)
+  isDefault  Boolean  @default(false)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([userId, isDefault])
+}
+
+model WishlistItem {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  productId String   @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@index([userId, createdAt])
+}

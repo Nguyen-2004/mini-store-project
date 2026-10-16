@@ -15,8 +15,32 @@ concurrency:
 
 jobs:
   ci:
-    name: Lint, build and verify Docker
+    name: Backend, frontend and Docker verification
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: mini_store
+          POSTGRES_USER: mini_store
+          POSTGRES_PASSWORD: TestDatabasePassword2026
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U mini_store -d mini_store"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://mini_store:TestDatabasePassword2026@localhost:5432/mini_store?schema=public
+      JWT_SECRET: ci-only-secret-with-at-least-32-characters-123456
+      JWT_EXPIRES_IN: 2h
+      CORS_ORIGIN: http://localhost:5173
+      ADMIN_USERNAME: ci-admin
+      ADMIN_EMAIL: ci-admin@example.test
+      ADMIN_PASSWORD: CI-Only-Admin-Password-2026!
+      ADMIN_FULL_NAME: CI Admin
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -25,9 +49,36 @@ jobs:
         with:
           node-version: "24"
           cache: npm
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+      - name: Install backend dependencies
+        run: npm ci
+        working-directory: backend
+      - name: Check backend JavaScript
+        run: npm run lint
+        working-directory: backend
+      - name: Audit production backend dependencies
+        run: npm audit --omit=dev
+        working-directory: backend
+      - name: Validate schema and generate Prisma Client
+        run: |
+          npx prisma validate
+          npm run db:generate
+        working-directory: backend
+      - name: Apply migrations and seed test data
+        run: |
+          npm run db:deploy
+          npm run db:seed
+        working-directory: backend
+      - name: Backend API integration tests
+        run: npm test
+        working-directory: backend
       - name: Install dependencies
         run: npm ci
+        working-directory: frontend
+      - name: Audit frontend dependencies
+        run: npm audit
         working-directory: frontend
       - name: Lint
         run: npm run lint
@@ -41,6 +92,8 @@ jobs:
         run: docker build --build-arg VITE_API_URL="$VITE_API_URL" -t mini-store-frontend:ci ./frontend
         env:
           VITE_API_URL: ${{ vars.VITE_API_URL }}
+      - name: Build backend Docker image
+        run: docker build -t mini-store-backend:ci ./backend
       - name: Verify Nginx and SPA fallback
         shell: bash
         run: |

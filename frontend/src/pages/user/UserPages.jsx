@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useStore } from "../../context/StoreContext";
-import { money, orderTotal } from "../../data/mockData";
+import { money, orderTotal } from "../../data/format";
 import PageHeading from "../../components/common/PageHeading";
 
 export function OrderDetail() {
@@ -17,8 +17,8 @@ export function Addresses() {
   const [editing, setEditing] = useState(null);
   const [notice, setNotice] = useState("");
   const mine = addresses.filter((a) => a.userId === account.id);
-  function submit(e) { e.preventDefault(); const values = Object.fromEntries(new FormData(e.currentTarget)); const addr = { ...editing, ...values, userId: account.id, isDefault: values.isDefault === "on" }; saveAddress(addr); setEditing(null); setNotice("Đã lưu địa chỉ."); }
-  function del(addr) { if (window.confirm("Xóa địa chỉ này?")) { remove("addresses", addr.id); setNotice("Đã xóa địa chỉ."); } }
+  async function submit(e) { e.preventDefault(); const values = Object.fromEntries(new FormData(e.currentTarget)); const addr = { ...editing, ...values, userId: account.id, isDefault: values.isDefault === "on" }; const saved = await saveAddress(addr); if (saved) { setEditing(null); setNotice("Đã lưu địa chỉ."); } }
+  async function del(addr) { if (window.confirm("Xóa địa chỉ này?")) { const deleted = await remove("addresses", addr.id); if (deleted) setNotice("Đã xóa địa chỉ."); } }
   return <><PageHeading eyebrow="TÀI KHOẢN CỦA BẠN" title="Địa chỉ nhận hàng" action={<button className="btn btn-primary" onClick={() => setEditing({})}>Thêm địa chỉ</button>}>Quản lý nơi nhận đơn hàng của bạn.</PageHeading>{notice && <div className="alert alert-success">{notice}</div>}{editing && <form className="panel p-4 mb-4" onSubmit={submit}><h2 className="h5">{editing.id ? "Sửa" : "Thêm"} địa chỉ</h2><div className="row g-3">{[["recipient","Người nhận"],["phone","Điện thoại"],["street","Địa chỉ"],["city","Tỉnh / thành phố"]].map(([name,label])=><div className="col-md-6" key={name}><label className="form-label">{label}</label><input className="form-control" name={name} defaultValue={editing[name] || ""} required/></div>)}</div><label className="form-check mt-3"><input className="form-check-input" type="checkbox" name="isDefault" defaultChecked={editing.isDefault}/> Đặt làm mặc định</label><button className="btn btn-primary mt-3">Lưu</button> <button type="button" className="btn btn-light mt-3" onClick={() => setEditing(null)}>Hủy</button></form>}<div className="row g-3">{mine.map((a)=><div className="col-md-6" key={a.id}><div className="panel p-4 h-100"><div className="d-flex justify-content-between"><strong>{a.recipient}</strong>{a.isDefault && <span className="status status-2">Mặc định</span>}</div><p className="small text-secondary mt-2">{a.phone}<br/>{a.street}, {a.city}</p><button className="btn btn-sm btn-light me-2" onClick={()=>setEditing(a)}>Sửa</button><button className="btn btn-sm btn-outline-danger" onClick={()=>del(a)}>Xóa</button>{!a.isDefault && <button className="btn btn-sm btn-link" onClick={()=>{setDefaultAddress(a.id);setNotice("Đã chọn địa chỉ mặc định.");}}>Đặt mặc định</button>}</div></div>)}</div>{!mine.length && <p className="empty-state">Bạn chưa lưu địa chỉ nào.</p>}</>;
 }
 
@@ -30,7 +30,7 @@ export function Wishlist() {
 
 export function ChangePassword() {
   const [message, setMessage] = useState("");
-  const [currentPassword, setCurrentPassword] = useState("123");
-  function submit(e) { e.preventDefault(); const f=new FormData(e.currentTarget); if(f.get("current")!==currentPassword){setMessage("Mật khẩu hiện tại chưa đúng.");return;} if(f.get("password")!==f.get("confirm")){setMessage("Mật khẩu xác nhận chưa khớp.");return;} setCurrentPassword(f.get("password"));setMessage("Đã đổi mật khẩu trong phiên demo. Mật khẩu đăng nhập demo sẽ được khôi phục khi tải lại trang."); e.currentTarget.reset(); }
-  return <><PageHeading eyebrow="TÀI KHOẢN CỦA BẠN" title="Đổi mật khẩu">Mô phỏng kiểm tra biểu mẫu, không gọi backend.</PageHeading><form className="panel p-4 profile-panel" onSubmit={submit}>{[["current","Mật khẩu hiện tại"],["password","Mật khẩu mới"],["confirm","Xác nhận mật khẩu mới"]].map(([name,label])=><div className="mb-3" key={name}><label className="form-label" htmlFor={name}>{label}</label><input className="form-control" id={name} name={name} type="password" minLength="3" required/></div>)}{message && <div className="alert alert-info">{message}</div>}<button className="btn btn-primary">Cập nhật mật khẩu</button></form></>;
+  const { changePassword } = useStore();
+  async function submit(e) { e.preventDefault(); const f=new FormData(e.currentTarget); if(f.get("password")!==f.get("confirm")){setMessage("Mật khẩu xác nhận chưa khớp.");return;} const ok=await changePassword({currentPassword:f.get("current"),newPassword:f.get("password")}); setMessage(ok ? "Đã cập nhật mật khẩu." : "Không thể cập nhật mật khẩu."); if(ok)e.currentTarget.reset(); }
+  return <><PageHeading eyebrow="TÀI KHOẢN CỦA BẠN" title="Đổi mật khẩu">Cập nhật mật khẩu đăng nhập cho tài khoản của bạn.</PageHeading><form className="panel p-4 profile-panel" onSubmit={submit}>{[["current","Mật khẩu hiện tại"],["password","Mật khẩu mới"],["confirm","Xác nhận mật khẩu mới"]].map(([name,label])=><div className="mb-3" key={name}><label className="form-label" htmlFor={name}>{label}</label><input className="form-control" id={name} name={name} type="password" minLength="8" required/></div>)}{message && <div className="alert alert-info">{message}</div>}<button className="btn btn-primary">Cập nhật mật khẩu</button></form></>;
 }

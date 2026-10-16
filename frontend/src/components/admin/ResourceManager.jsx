@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useStore } from "../../context/StoreContext";
-import { money } from "../../data/mockData";
+import { money } from "../../data/format";
 import PageHeading from "../common/PageHeading";
 const productFields = [
   ["name", "Tên sản phẩm", "text"],
@@ -15,6 +15,8 @@ const userFields = [
   ["fullName", "Họ tên", "text"],
   ["email", "Email", "email"],
   ["phone", "Số điện thoại", "tel"],
+  ["password", "Mật khẩu (tài khoản mới)", "password"],
+  ["role", "Vai trò", "select"],
 ];
 export default function ResourceManager({ type }) {
   const store = useStore();
@@ -37,11 +39,11 @@ export default function ResourceManager({ type }) {
       .toLocaleLowerCase("vi")
       .includes(search.trim().toLocaleLowerCase("vi")),
   );
-  function submit(event) {
+  async function submit(event) {
     event.preventDefault();
     const values = Object.fromEntries(new FormData(event.currentTarget));
     for (const key in values) values[key] = values[key].trim();
-    if (fields.some(([name]) => !values[name])) {
+    if (fields.some(([name]) => name !== "password" && !values[name])) {
       setError("Vui lòng nhập đầy đủ thông tin, không chỉ khoảng trắng.");
       return;
     }
@@ -68,13 +70,17 @@ export default function ResourceManager({ type }) {
         return;
       }
       values.image = editing.image || "/products/milk.svg";
+    } else {
+      if (!editing.id && !values.password) { setError("Vui lòng đặt mật khẩu cho tài khoản mới."); return; }
+      values.role = (values.role || "USER").toUpperCase();
+      values.active = editing.active ?? true;
     }
-    store.save(type, {
+    const saved = await store.save(type, {
       ...editing,
       ...values,
-      ...(!isProduct && { role: editing.role || "user", active: editing.active ?? true }),
       ...(isProduct && { active: editing.active ?? true }),
     });
+    if (!saved) { setError("Không lưu được dữ liệu. Vui lòng kiểm tra các trường và thử lại."); return; }
     setEditing(null);
     setError("");
     setNotice("Đã lưu " + label + ".");
@@ -144,21 +150,24 @@ export default function ResourceManager({ type }) {
                       maxLength={1000}
                       rows={3}
                     />
+                  ) : name === "category" ? (
+                    <select className="form-select" id={"edit-" + name} name={name} defaultValue={editing.category || ""} required><option value="">Chọn danh mục</option>{store.categories.map((item) => <option key={item.id} value={item.name}>{item.name}</option>)}</select>
+                  ) : inputType === "select" ? (
+                    <select className="form-select" id={"edit-" + name} name={name} defaultValue={(editing.role || "user").toUpperCase()}><option value="USER">Người dùng</option><option value="ADMIN">Quản trị</option></select>
                   ) : (
                     <input
                       className="form-control"
                       id={"edit-" + name}
                       name={name}
                       type={inputType}
+                      required={name !== "phone" && name !== "password"}
+                      minLength={name === "password" ? 8 : undefined}
+                      autoComplete={name === "password" ? "new-password" : undefined}
                       defaultValue={editing[name] ?? ""}
-                      required
                       min={inputType === "number" ? "0" : undefined}
                       max={inputType === "number" ? "1000000000000" : undefined}
                       step={inputType === "number" ? "1" : undefined}
                       maxLength={120}
-                      readOnly={
-                        name === "username" && ["u1", "u2"].includes(editing.id)
-                      }
                       pattern={
                         name === "phone" ? "[+0-9 ()-]{8,20}" : undefined
                       }
@@ -174,8 +183,7 @@ export default function ResourceManager({ type }) {
             )}
             {!isProduct && (
               <p className="small text-secondary mt-3">
-                Tài khoản mới dùng để quản lý danh sách. Chỉ hai tài khoản demo
-                có thể đăng nhập.
+                Tài khoản được tạo thật và có thể đăng nhập ngay sau khi lưu.
               </p>
             )}
             <div className="d-flex gap-2 mt-4">
@@ -258,12 +266,6 @@ export default function ResourceManager({ type }) {
                       </button>
                       <button
                         className="btn btn-sm btn-outline-danger"
-                        disabled={!isProduct && ["u1", "u2"].includes(row.id)}
-                        title={
-                          !isProduct && ["u1", "u2"].includes(row.id)
-                            ? "Giữ lại tài khoản demo"
-                            : "Xóa"
-                        }
                         aria-label={"Xóa " + (row.name || row.username)}
                         onClick={() => deleteRow(row)}
                       >

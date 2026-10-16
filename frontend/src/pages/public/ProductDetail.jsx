@@ -1,9 +1,11 @@
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useStore } from "../../context/StoreContext";
-import { money } from "../../data/mockData";
+import { money } from "../../data/format";
 export default function ProductDetail() {
   const { id } = useParams();
-  const { products, addToCart, toggleWishlist, wishlist } = useStore();
+  const { products, addToCart, toggleWishlist, wishlist, account } = useStore();
+  const navigate = useNavigate();
+  const withAccount = (action) => account ? action(product.id) : navigate("/login");
   const product = products.find((p) => p.id === id);
   if (!product)
     return (
@@ -46,8 +48,8 @@ export default function ProductDetail() {
             Sản phẩm được giao tận nơi trong khu vực phục vụ của Mini Store.
           </p>
           <div className="d-flex gap-2 mt-4">
-            <button className="btn btn-primary" disabled={!product.stock} onClick={() => addToCart(product.id)}><i className="bi bi-bag-plus me-2"/>Thêm vào giỏ</button>
-            <button className={`btn ${wishlist.includes(product.id) ? "btn-outline-danger" : "btn-light"}`} onClick={() => toggleWishlist(product.id)}><i className={`bi ${wishlist.includes(product.id) ? "bi-heart-fill" : "bi-heart"} me-2`}/>Yêu thích</button>
+            <button className="btn btn-primary" disabled={!product.stock} onClick={() => withAccount(addToCart)}><i className="bi bi-bag-plus me-2"/>Thêm vào giỏ</button>
+            <button className={`btn ${wishlist.includes(product.id) ? "btn-outline-danger" : "btn-light"}`} onClick={() => withAccount(toggleWishlist)}><i className={`bi ${wishlist.includes(product.id) ? "bi-heart-fill" : "bi-heart"} me-2`}/>Yêu thích</button>
           </div>
         </div>
       </div>

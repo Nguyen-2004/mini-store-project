@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useStore } from "../../context/StoreContext";
-import { statuses } from "../../data/mockData";
+import { statuses } from "../../data/format";
 import PageHeading from "../../components/common/PageHeading";
 import OrderTable from "../../components/common/OrderTable";
 export default function ManageOrders() {

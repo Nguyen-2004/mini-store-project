@@ -1,8 +1,10 @@
-import { Link } from "react-router-dom";
-import { money } from "../../data/mockData";
+import { Link, useNavigate } from "react-router-dom";
+import { money } from "../../data/format";
 import { useStore } from "../../context/StoreContext";
 export default function ProductCard({ product }) {
-  const { addToCart, toggleWishlist, wishlist } = useStore();
+  const { addToCart, toggleWishlist, wishlist, account } = useStore();
+  const navigate = useNavigate();
+  const requireAccount = () => { if (!account) navigate("/login"); };
   return (
     <article className="product-card h-100">
       <Link to={`/products/${product.id}`} className="product-image">
@@ -25,10 +27,10 @@ export default function ProductCard({ product }) {
           </Link>
         </div>
         <div className="d-flex gap-2 mt-3">
-          <button className="btn btn-primary btn-sm flex-grow-1" disabled={!product.stock} onClick={() => addToCart(product.id)}>
+          <button className="btn btn-primary btn-sm flex-grow-1" disabled={!product.stock} onClick={() => account ? addToCart(product.id) : requireAccount()}>
             <i aria-hidden="true" className="bi bi-bag-plus me-1" /> Thêm giỏ
           </button>
-          <button className={`btn btn-sm ${wishlist.includes(product.id) ? "btn-outline-danger" : "btn-light"}`} aria-label="Yêu thích" onClick={() => toggleWishlist(product.id)}>
+          <button className={`btn btn-sm ${wishlist.includes(product.id) ? "btn-outline-danger" : "btn-light"}`} aria-label="Yêu thích" onClick={() => account ? toggleWishlist(product.id) : requireAccount()}>
             <i aria-hidden="true" className={`bi ${wishlist.includes(product.id) ? "bi-heart-fill" : "bi-heart"}`} />
           </button>
         </div>

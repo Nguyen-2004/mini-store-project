@@ -3,7 +3,7 @@ import { useStore } from "../../context/StoreContext";
 import PageHeading from "../../components/common/PageHeading";
 import StatCard from "../../components/common/StatCard";
 import OrderTable from "../../components/common/OrderTable";
-import { money, orderTotal } from "../../data/mockData";
+import { money, orderTotal } from "../../data/format";
 export default function UserDashboard() {
   const { account, orders } = useStore();
   const mine = orders.filter((o) => o.userId === account.id);

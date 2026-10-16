@@ -9,6 +9,7 @@ import Products from "./pages/public/Products";
 import ProductDetail from "./pages/public/ProductDetail";
 import About from "./pages/public/About";
 import Login from "./pages/public/Login";
+import Register from "./pages/public/Register";
 import Cart from "./pages/public/Cart";
 import Checkout from "./pages/public/Checkout";
 import OrderConfirmation from "./pages/public/OrderConfirmation";
@@ -31,9 +32,10 @@ export default function App() {
             <Route path="products/:id" element={<ProductDetail />} />
             <Route path="about" element={<About />} />
             <Route path="login" element={<Login />} />
+            <Route path="register" element={<Register />} />
             <Route path="cart" element={<Cart />} />
             <Route path="checkout" element={<Checkout />} />
-            <Route path="order-confirmation/:id" element={<OrderConfirmation />} />
+            <Route element={<ProtectedRoute role="user" />}><Route path="order-confirmation/:id" element={<OrderConfirmation />} /></Route>
             <Route
               path="*"
               element={

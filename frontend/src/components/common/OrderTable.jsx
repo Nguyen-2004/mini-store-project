@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { money, orderTotal } from "../../data/mockData";
+import { money, orderTotal } from "../../data/format";
 const statusOptions = ["Đang xử lý", "Đang giao", "Hoàn thành", "Đã hủy"];
 export default function OrderTable({ orders, showCustomer = false, detailBase, onStatusChange }) {
   const [selected, setSelected] = useState(null);

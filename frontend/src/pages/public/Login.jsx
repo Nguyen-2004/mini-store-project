@@ -2,16 +2,20 @@ import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useStore } from "../../context/StoreContext";
 export default function Login() {
-  const { account, login } = useStore();
+  const { account, login, loading } = useStore();
+  const [busy, setBusy] = useState(false);
   const navigate = useNavigate();
   const [error, setError] = useState("");
+  if (loading) return <div className="container section-space text-center">Đang tải…</div>;
   if (account) return <Navigate to={`/${account.role}/dashboard`} replace />;
-  function submit(event) {
+  async function submit(event) {
     event.preventDefault();
+    setBusy(true); setError("");
     const values = new FormData(event.currentTarget);
-    const role = login(values.get("username").trim(), values.get("password"));
+    const role = await login(values.get("identifier").trim(), values.get("password"));
     if (role) navigate(`/${role}/dashboard`, { replace: true });
-    else setError("Tên đăng nhập hoặc mật khẩu không đúng.");
+    else setError("Không đăng nhập được. Hãy kiểm tra thông tin và thử lại.");
+    setBusy(false);
   }
   return (
     <div className="login-section container">
@@ -41,12 +45,12 @@ export default function Login() {
           </div>
         )}
         <form onSubmit={submit}>
-          <label className="form-label" htmlFor="username">
-            Tên đăng nhập
+          <label className="form-label" htmlFor="identifier">
+            Email hoặc tên đăng nhập
           </label>
           <input
-            id="username"
-            name="username"
+            id="identifier"
+            name="identifier"
             className="form-control mb-3"
             autoComplete="username"
             required
@@ -62,24 +66,12 @@ export default function Login() {
             autoComplete="current-password"
             required
           />
-          <button className="btn btn-primary w-100 py-3">
+          <button className="btn btn-primary w-100 py-3" disabled={busy}>
             Đăng nhập{" "}
             <i aria-hidden="true" className="bi bi-arrow-right ms-2" />
           </button>
         </form>
-        <div className="demo-accounts mt-4">
-          <strong>
-            <i aria-hidden="true" className="bi bi-info-circle me-2" />
-            Tài khoản trải nghiệm
-          </strong>
-          <div>
-            User <code>user / 123</code>
-          </div>
-          <div>
-            Admin <code>admin / 123</code>
-          </div>
-          <small>Đăng nhập giả lập, không cần đăng ký.</small>
-        </div>
+        <p className="mt-4 mb-0">Chưa có tài khoản? <a href="/register">Đăng ký</a></p>
       </section>
     </div>
   );
