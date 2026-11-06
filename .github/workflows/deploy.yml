@@ -111,10 +111,48 @@ jobs:
             cmp /tmp/home.html /tmp/route.html
           done
 
-  # TODO CD: thêm job deploy với needs: ci, chỉ chạy push vào main.
+  publish:
+    name: Build and publish images to GHCR
+    needs: ci
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v7
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: ghcr.io/nguyen-2004/mini-store-backend:${{ github.sha }}
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v7
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          build-args: |
+            VITE_API_URL=/api
+          tags: ghcr.io/nguyen-2004/mini-store-frontend:${{ github.sha }}
+
+  # TODO CD: thêm job deploy với needs: [ci, publish], chỉ chạy push vào main.
   # 1. Cấu hình GitHub Environment production và chính sách phê duyệt.
-  # 2. Đăng nhập registry bằng secrets (DOCKERHUB_USERNAME / DOCKERHUB_TOKEN).
-  # 3. Build/push image gắn tag github.sha; tránh chỉ dùng latest.
-  # 4. Triển khai image trên server bằng thông tin SSH lưu trong secrets.
-  # 5. Kiểm tra /health; rollback về tag trước nếu triển khai thất bại.
-  # Chưa có registry/server: workflow chỉ CI, không tự triển khai.
+  # 2. Triển khai image tag github.sha trên server bằng thông tin SSH lưu trong secrets.
+  # 3. Kiểm tra /health; rollback về tag trước nếu triển khai thất bại.
+  # GHCR publish được thực hiện bởi job publish; deploy vẫn chưa được cấu hình.

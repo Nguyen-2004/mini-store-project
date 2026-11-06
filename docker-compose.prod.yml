@@ -1,0 +1,60 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in production.env}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in production.env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in production.env}
+    volumes:
+      - ministore_prod_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks: [ministore_prod]
+
+  backend:
+    image: ghcr.io/${GHCR_OWNER:?Set GHCR_OWNER in production.env}/mini-store-backend:${IMAGE_TAG:?Set IMAGE_TAG to an immutable image tag}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL using host postgres and port 5432}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in production.env}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-8h}
+      CORS_ORIGIN: ${CORS_ORIGIN:?Set CORS_ORIGIN to the production frontend origin}
+      DB_CONNECT_ATTEMPTS: 1
+      SEED_ON_START: ${SEED_ON_START:-false}
+    expose:
+      - "3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 45s
+    networks: [ministore_prod]
+
+  frontend:
+    image: ghcr.io/${GHCR_OWNER:?Set GHCR_OWNER in production.env}/mini-store-frontend:${IMAGE_TAG:?Set IMAGE_TAG to an immutable image tag}
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-8080}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks: [ministore_prod]
+
+volumes:
+  ministore_prod_postgres_data:
+    name: ministore_prod_postgres_data
+
+networks:
+  ministore_prod:
+    name: ministore_prod
+    driver: bridge

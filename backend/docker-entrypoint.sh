@@ -10,5 +10,7 @@ until node src/config/wait-for-db.js; do
   sleep 2
 done
 npm run db:deploy
-npm run db:seed
+if [ "${SEED_ON_START:-false}" = "true" ]; then
+  npm run db:seed
+fi
 exec npm start
